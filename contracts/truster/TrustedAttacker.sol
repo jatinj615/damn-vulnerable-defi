@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./TrusterLenderPool.sol";
 
-contract Attacker{
+contract TrustedAttacker{
     uint256 constant public MAX_UINT = 2**256 - 1;
 
     IERC20 public token;
